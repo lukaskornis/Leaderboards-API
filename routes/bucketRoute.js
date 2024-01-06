@@ -39,4 +39,34 @@ router.get('/:boardName/:bucket(\\d+)', (req, res) => {
 });
 
 
+// SAVING LOADING
+const fs = require('fs');
+const saveFile = 'data/buckets.json';
+
+function saveBuckets() {
+    fs.writeFile(saveFile, JSON.stringify(buckets), function (err) {
+        if (err) throw err;
+        console.log('Saved Buckets!');
+    });
+}
+
+function loadBuckets() {
+    fs.readFile(saveFile, function (err, data) {
+        if (err) throw err;
+        Object.assign(buckets, JSON.parse(data));
+    });
+}
+
+// load buckets from file on startup
+loadBuckets();
+
+// save buckets to file every 30 seconds
+setInterval(() => { saveBuckets(); }, 1000 * 30);
+// save buckets to file on exit
+process.on('SIGINT', function () {
+    saveBuckets();
+    process.exit();
+});
+
+
 module.exports = router;
