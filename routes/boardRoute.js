@@ -1,129 +1,122 @@
-const fs = require('fs');
-
 const express = require('express');
 const router = express.Router();
 
 const minNameLength = 3;
 const maxNameLength = 10;
 
-const boards = {}
+let boards = {};
 
-
-// get all boards only names
+// get all board names
 router.get('/', (req, res) => {
     res.send(Object.keys(boards));
 });
 
-
+// get board
 router.get('/:boardName', (req, res) => {
-    if (boards[req.params.boardName]) {
-        // send format: name,score|name,score|name,score
-        res.send(Object.entries(boards[req.params.boardName]).map(x => x.join('|')).join(','));
-    } else {
-        res.send('Board not found');
-    }
+    const board = boards[req.params.boardName] || 'Board not found';
+    res.send(board);
 });
 
 // reset board
 router.get('/:boardName/reset', (req, res) => {
-    if (boards[req.params.boardName]) {
+    const board = boards[req.params.boardName];
+    if (board) {
         boards[req.params.boardName] = {};
         res.send('Board reset');
     } else {
         res.send('Board not found');
     }
 });
-
-
-
 // Add new score /boardName/name/score
 router.get('/:boardName/:name([a-zA-Z][a-zA-Z0-9_-]*)/:score(\\d+)', (req, res) => {
-    if (req.params.name.length < minNameLength || req.params.name.length > maxNameLength) {
-        res.send('Name length must be between ' + minNameLength + ' and ' + maxNameLength);
-        return;
+    const { boardName, name, score } = req.params;
+    if (name.length < minNameLength || name.length > maxNameLength) {
+        return res.status(400).json({ error: `Name length must be between ${minNameLength} and ${maxNameLength}` });
     }
 
-    boards[req.params.boardName] = boards[req.params.boardName] || {};
-    var score = parseInt(req.params.score);
+    const board = boards[boardName] = boards[boardName] || {};
+    const scoreInt = parseInt(score);
 
-    // if score exists and is lower than new score, return
-    if (boards[req.params.boardName][req.params.name] && boards[req.params.boardName][req.params.name] >= score) {
-        res.send('Score exists and is equal or higher');
-        return;
+    if (board[name] && board[name] >= scoreInt) {
+        return res.status(400).json({ error: 'Score exists and is equal or higher' });
     }
 
-    boards[req.params.boardName][req.params.name] = score;
-    // sort scores
-    boards[req.params.boardName] = Object.fromEntries(Object.entries(boards[req.params.boardName]).sort(([, a], [, b]) => b - a));
-
-    res.json(boards[req.params.boardName]);
+    board[name] = scoreInt;
+    boards[boardName] = Object.fromEntries(Object.entries(board).sort(([, a], [, b]) => b - a));
+    res.json(board);
 });
-
 
 // Delete score /boardName/name/delete
 router.get('/:boardName/:name/delete', (req, res) => {
-    if (boards[req.params.boardName]) {
-        delete boards[req.params.boardName][req.params.name];
-        res.send(boards[req.params.boardName]);
-    } else {
-        res.send('Not found');
+    const board = boards[req.params.boardName];
+    if (!board) {
+        return res.status(404).json({ error: 'Board not found' });
     }
+
+    delete board[req.params.name];
+    res.json(board);
 });
 
 // route get top scores
 router.get('/:boardName/:from(\\d+)-:to(\\d+)', (req, res) => {
-    if (boards[req.params.boardName]) {
-        var board = boards[req.params.boardName];
-        var from = parseInt(req.params.from);
-        var to = parseInt(req.params.to);
-        var top = Object.entries(board).slice(from, to);
-
-        // send format: name,score|name,score|name,score
-        res.send(top.map(x => x.join('|')).join(','));
-    } else {
-        res.send('Board not found');
+    const board = boards[req.params.boardName];
+    if (!board) {
+        return res.status(404).json({ error: 'Board not found' });
     }
-});
 
+    const { from, to } = req.params;
+    const top = Object.entries(board).slice(parseInt(from), parseInt(to));
+    res.json(top);
+});
 
 // route get user score and position. board is already sorted
 router.get('/:boardName/:name', (req, res) => {
-    if (boards[req.params.boardName]) {
-        var board = boards[req.params.boardName];
-        var name = req.params.name;
-        if (board[name]) {
-            var position = Object.keys(board).indexOf(name);
-            res.send({ score: board[name], position: position, total: Object.keys(board).length });
-        } else {
-            res.send('Name not found');
-        }
-    } else {
-        res.send('Board not found');
+    const board = boards[req.params.boardName];
+    if (!board) {
+        return res.status(404).json({ error: 'Board not found' });
     }
+
+    const name = req.params.name;
+    if (!board[name]) {
+        return res.status(404).json({ error: 'Name not found' });
+    }
+
+    const position = Object.keys(board).indexOf(name);
+    res.json({ score: board[name], position, total: Object.keys(board).length });
 });
-
-
 // Saving/Loading boards to/from file
-function saveBoards() {
-    fs.writeFile('data/boards.json', JSON.stringify(boards), function (err) {
-        if (err) throw err;
-        console.log('Saved!');
-    });
-}
+const fs = require('fs');
+const saveFile = 'data/boards.json';
 
-// save to file every X minutes
-setInterval(() => { saveBoards(); }, 1000 * 30);
+const saveData = (data) => {
+    try {
+        fs.writeFileSync(saveFile, JSON.stringify(data));
+        console.log('Data saved!');
+    } catch (err) {
+        console.error(err);
+    }
+};
 
-// save to file on exit
-process.on('SIGINT', function () {
-    saveBoards();
+const loadData = () => {
+    try {
+        const data = fs.readFileSync(saveFile);
+        return JSON.parse(data);
+    } catch (err) {
+        console.error(err);
+        return {};
+    }
+};
+
+boards = loadData();
+
+// save boards to file every 30 seconds
+setInterval(() => saveData(boards), 1000 * 30);
+
+// save boards to file on exit
+process.on('SIGINT', () => {
+    saveData(boards);
     process.exit();
 });
 
-// load boards from file
-fs.readFile('data/boards.json', (err, data) => {
-    if (err) throw err;
-    Object.assign(boards, JSON.parse(data));
-});
 
 module.exports = router;

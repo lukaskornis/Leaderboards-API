@@ -3,37 +3,34 @@ const router = express.Router();
 
 const buckets = {}
 
-// view all buckets
+// view all buckets names
 router.get('/', (req, res) => {
-    res.send(buckets[req.params.boardName]);
+    res.send(Object.keys(buckets));
 });
 
 // view buckets for board
 router.get('/:boardName', (req, res) => {
-    if (buckets[req.params.boardName]) {
-        res.send(buckets[req.params.boardName]);
-    } else {
-        res.send('Bucket board not found');
-    }
+    const { boardName } = req.params;
+
+    // if board does not exist, return an error message
+    const board = buckets[boardName] || 'Bucket board not found';
+
+    res.send(board);
 });
 
 
 // add to buckets
 router.get('/:boardName/:bucket(\\d+)', (req, res) => {
-    // if board does not exist, create it
-    if (!buckets[req.params.boardName]) {
-        buckets[req.params.boardName] = {};
-    }
+    const { boardName, bucket } = req.params;
 
-    // if bucket does not exist, create it
-    if (!buckets[req.params.boardName][req.params.bucket]) {
-        buckets[req.params.boardName][req.params.bucket] = 0;
-        // sort it by key
-        buckets[req.params.boardName] = Object.keys(buckets[req.params.boardName]).sort().reduce((r, k) => (r[k] = buckets[req.params.boardName][k], r), {});
-    }
+    // if board does not exist, create it
+    buckets[boardName] = buckets[boardName] || {};
+
+    // if bucket does not exist, create it and set its value to 0
+    buckets[boardName][bucket] = buckets[boardName][bucket] || 0;
 
     // increment bucket
-    buckets[req.params.boardName][req.params.bucket]++;
+    buckets[boardName][bucket]++;
 
     res.send('Bucket incremented');
 });
@@ -43,30 +40,34 @@ router.get('/:boardName/:bucket(\\d+)', (req, res) => {
 const fs = require('fs');
 const saveFile = 'data/buckets.json';
 
-function saveBuckets() {
-    fs.writeFile(saveFile, JSON.stringify(buckets), function (err) {
-        if (err) throw err;
+const saveBuckets = () => {
+    try {
+        fs.writeFileSync(saveFile, JSON.stringify(buckets));
         console.log('Saved Buckets!');
-    });
-}
+    } catch (err) {
+        console.error(err);
+    }
+};
 
-function loadBuckets() {
-    fs.readFile(saveFile, function (err, data) {
-        if (err) throw err;
+const loadBuckets = () => {
+    try {
+        const data = fs.readFileSync(saveFile);
         Object.assign(buckets, JSON.parse(data));
-    });
-}
+    } catch (err) {
+        console.error(err);
+    }
+};
 
 // load buckets from file on startup
 loadBuckets();
 
 // save buckets to file every 30 seconds
-setInterval(() => { saveBuckets(); }, 1000 * 30);
+setInterval(saveBuckets, 1000 * 30);
+
 // save buckets to file on exit
-process.on('SIGINT', function () {
+process.on('SIGINT', () => {
     saveBuckets();
     process.exit();
 });
-
 
 module.exports = router;

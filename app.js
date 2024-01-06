@@ -2,21 +2,16 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const bucketRoute = require('./routes/bucketRoute');
 const boardRoute = require('./routes/boardRoute');
+const toLowerCaseMiddleware = require('./middlewares/toLowerCaseMiddleware');
 
 const app = express();
 const port = process.env.PORT || 80;
 
-
-const limiter = rateLimit({
+app.use(rateLimit({
     windowMs: 1000 * 60, // 1 minute
     max: 20 // limit each IP to 20 requests
-});
-app.use(limiter);
+}));
 
-const toLowerCaseMiddleware = (req, res, next) => {
-    req.url = req.url.toLowerCase();
-    next();
-};
 app.use(toLowerCaseMiddleware);
 
 app.use("/boards", boardRoute);
@@ -27,16 +22,19 @@ app.get('/', (req, res) => {
 });
 
 // error handler
-app.use(function (err, req, res, next) {
-    console.error(err.stack)
-    res.status(500).send('Something broke!')
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
 });
 
 // undefined routes
-app.use(function (req, res, next) {
+app.all('*', (req, res) => {
     res.status(404).send('?');
 });
 
-app.listen(port, () => {
-    console.log(`listening at ${port} port`)
+app.listen(port, err => {
+    if (err) {
+        return console.error(err);
+    }
+    console.log(`listening at ${port} port`);
 });
