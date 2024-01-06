@@ -1,0 +1,29 @@
+GET http://localhost/scores
+
+HTTP/1.1 200  - OK
+x-powered-by: Express
+content-type: application/json; charset=utf-8
+content-length: 22
+etag: W/"16-OVREG8Zf2L3N3wioIIGVMV61YwQ"
+date: Sat, 06 Jan 2024 10:35:03 GMT
+connection: close
+###
+GET http://localhost/scores/sdbasd/100
+
+HTTP/1.1 200  - OK
+x-powered-by: Express
+content-type: application/json; charset=utf-8
+content-length: 124
+etag: W/"7c-U8+4dMz7f5YL5tzxIX+P691i7H8"
+date: Sat, 06 Jan 2024 10:35:19 GMT
+connection: close
+###
+GET http://localhost/scores/Bob/delete
+
+HTTP/1.1 200  - OK
+x-powered-by: Express
+content-type: application/json; charset=utf-8
+content-length: 77
+etag: W/"4d-MrtutcV3zWgBpER+WwoRcSHTL6o"
+date: Sat, 06 Jan 2024 10:29:48 GMT
+connection: close
