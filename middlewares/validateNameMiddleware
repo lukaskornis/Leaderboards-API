@@ -1,0 +1,13 @@
+const minNameLength = 3;
+const maxNameLength = 10;
+
+module.exports = (req, res, next) => {
+    const { name } = req.params;
+
+
+    if (name != undefined && (name.length < minNameLength || name.length > maxNameLength)) {
+        return res.status(400).json({ error: `Name length must be between ${minNameLength} and ${maxNameLength}` });
+    }
+
+    next();
+}

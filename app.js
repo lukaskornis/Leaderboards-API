@@ -1,7 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const bucketRoute = require('./routes/bucketRoute');
-const boardRoute = require('./routes/boardRoute');
+const boardRoute = require('./routes/boardRoute').router;
 const toLowerCaseMiddleware = require('./middlewares/toLowerCaseMiddleware');
 
 const app = express();

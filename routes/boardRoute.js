@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const validateName = require('../middlewares/validateNameMiddleware');
 
 const minNameLength = 3;
 const maxNameLength = 10;
@@ -21,11 +22,8 @@ router.get('/:boardName/reset', (req, res) => {
 
 
 // Add new score /boardName/name/score
-router.get('/:boardName/:name([a-z][a-z0-9_-]*)/:score(\\d+)', (req, res) => {
+router.get('/:boardName/:name([a-z][a-z0-9_-]*)/:score(\\d+)', validateName, (req, res) => {
     const { boardName, name, score } = req.params;
-    if (name.length < minNameLength || name.length > maxNameLength) {
-        return res.status(400).json({ error: `Name length must be between ${minNameLength} and ${maxNameLength}` });
-    }
 
     const board = boards[boardName] = boards[boardName] || {};
     const scoreInt = parseInt(score);
@@ -124,4 +122,7 @@ process.on('SIGINT', () => {
     process.exit();
 });
 
-module.exports = router;
+module.exports = {
+    router,
+    boards
+}
