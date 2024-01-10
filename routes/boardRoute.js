@@ -22,17 +22,18 @@ router.get('/:boardName/reset', (req, res) => {
 
 
 // Add new score /boardName/name/score
-router.get('/:boardName/:name([a-z][a-z0-9_-]*)/:score(\\d+)', validateName, (req, res) => {
+router.get('/:boardName/:name([a-z][a-z0-9_-]*)/:score(\\d+)/*', validateName, (req, res) => {
     const { boardName, name, score } = req.params;
+    const isAddition = req.path.endsWith('/add');
 
     const board = boards[boardName] = boards[boardName] || {};
     const scoreInt = parseInt(score);
 
-    if (board[name] && board[name] >= scoreInt) {
+    if (!isAddition && board[name] && board[name] >= scoreInt) {
         return res.status(400).json({ error: 'Score exists and is equal or higher' });
     }
 
-    board[name] = scoreInt;
+    board[name] = isAddition ? (board[name] || 0) + scoreInt : scoreInt;
     boards[boardName] = Object.fromEntries(Object.entries(board).sort(([, a], [, b]) => b - a));
     res.json(board);
 });

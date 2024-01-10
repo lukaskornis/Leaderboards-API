@@ -1,0 +1,26 @@
+// express-pipe-middleware.js
+function pipeMiddleware(req, res, next) {
+    // Check if the route path ends with "/pipe"
+    if (req.path.endsWith('/pipe')) {
+        console.log('pipeMiddleware');
+        // Set the response headers for both JSON and text
+        res.setHeader('Content-Type', 'text/plain');
+
+        // Override the res.json function to output JSON and text
+        const originalJson = res.json;
+        res.json = function (data) {
+            // Output JSON
+            originalJson.call(this, data);
+
+            // Output pipe and comma-delimited text
+            const textData = Object.values(data).join(',') + '\n';
+            res.write(textData);
+            res.end();
+        };
+    }
+
+    // Continue to the next middleware or route handler
+    next();
+}
+
+module.exports = pipeMiddleware;

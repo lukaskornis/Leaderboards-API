@@ -3,6 +3,7 @@ const rateLimit = require('express-rate-limit');
 const bucketRoute = require('./routes/bucketRoute');
 const boardRoute = require('./routes/boardRoute').router;
 const toLowerCaseMiddleware = require('./middlewares/toLowerCaseMiddleware');
+const pipeOutputMiddleware = require('./middlewares/pipeOutputMiddleware');
 
 const app = express();
 const port = process.env.PORT || 80;
@@ -16,6 +17,8 @@ app.use(toLowerCaseMiddleware);
 
 app.use("/boards", boardRoute);
 app.use("/buckets", bucketRoute);
+
+app.use(pipeOutputMiddleware);
 
 app.get('/', (req, res) => {
     res.send('SimVik Leaderboard API!');
