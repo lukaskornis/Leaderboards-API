@@ -3,19 +3,10 @@ const router = express.Router();
 
 const buckets = {}
 
+
 // view all buckets names
 router.get('/', (req, res) => {
     res.send(Object.keys(buckets));
-});
-
-// view buckets for board
-router.get('/:boardName', (req, res) => {
-    const { boardName } = req.params;
-
-    // if board does not exist, return an error message
-    const board = buckets[boardName] || 'Bucket board not found';
-
-    res.send(board);
 });
 
 
@@ -36,9 +27,22 @@ router.get('/:boardName/:bucket(\\d+)', (req, res) => {
 });
 
 
+// view buckets for board
+router.get('/:boardName([a-z][a-z0-9_-]*)', (req, res) => {
+    const { boardName } = req.params;
+
+    // if board does not exist, return an error message
+    const board = buckets[boardName] || 'Bucket board not found';
+
+    res.send(board);
+});
+
+
+
 // SAVING LOADING
 const fs = require('fs');
 const saveFile = 'data/buckets.json';
+
 
 const saveBuckets = () => {
     try {
@@ -49,6 +53,7 @@ const saveBuckets = () => {
     }
 };
 
+
 const loadBuckets = () => {
     try {
         const data = fs.readFileSync(saveFile);
@@ -58,16 +63,20 @@ const loadBuckets = () => {
     }
 };
 
+
 // load buckets from file on startup
 loadBuckets();
 
+
 // save buckets to file every 30 seconds
 setInterval(saveBuckets, 1000 * 30);
+
 
 // save buckets to file on exit
 process.on('SIGINT', () => {
     saveBuckets();
     process.exit();
 });
+
 
 module.exports = router;
