@@ -69,7 +69,7 @@ loadBuckets();
 
 
 // save buckets to file every 30 seconds
-setInterval(saveBuckets, 1000 * 30);
+setInterval(saveBuckets, 1000 * 60);
 
 
 // save buckets to file on exit

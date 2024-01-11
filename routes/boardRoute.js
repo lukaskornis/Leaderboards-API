@@ -114,7 +114,7 @@ const loadData = () => {
 boards = loadData();
 
 // save boards to file every 30 seconds
-setInterval(() => saveData(boards), 1000 * 30);
+setInterval(() => saveData(boards), 1000 * 60);
 
 // save boards to file on exit
 process.on('SIGINT', () => {

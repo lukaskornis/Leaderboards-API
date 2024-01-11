@@ -18,7 +18,7 @@ app.use("/boards", boardRoute);
 app.use("/buckets", bucketRoute);
 
 app.get('/', (req, res) => {
-    res.send('SimVik Leaderboard API!');
+    res.send('Sim&Vik Leaderboard API!');
 });
 
 // error handler
