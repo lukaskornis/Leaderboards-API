@@ -5,7 +5,7 @@ const boardRoute = require('./routes/boardRoute').router;
 const toLowerCaseMiddleware = require('./middlewares/toLowerCaseMiddleware');
 
 const app = express();
-const port = process.env.PORT || 80;
+const port = process.env.PORT || 3000;
 
 app.use(rateLimit({
     windowMs: 1000 * 60, // 1 minute
