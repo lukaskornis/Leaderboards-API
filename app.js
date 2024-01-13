@@ -1,8 +1,13 @@
 const express = require('express');
+
 const rateLimit = require('express-rate-limit');
+const cors = require('cors');
+
 const bucketRoute = require('./routes/bucketRoute');
 const boardRoute = require('./routes/boardRoute').router;
+
 const toLowerCaseMiddleware = require('./middlewares/toLowerCaseMiddleware');
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -10,6 +15,10 @@ const port = process.env.PORT || 3000;
 app.use(rateLimit({
     windowMs: 1000 * 60, // 1 minute
     max: 20 // limit each IP to 20 requests
+}));
+
+app.use(cors({
+    origin: '*', // allow all origins
 }));
 
 app.use(toLowerCaseMiddleware);

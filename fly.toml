@@ -1,12 +1,17 @@
-# fly.toml app configuration file generated for jamboard on 2024-01-11T21:02:07+02:00
+# fly.toml app configuration file generated for simvik on 2024-01-11T22:51:29+02:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = "jamboard"
+app = "simvik"
 primary_region = "waw"
 
 [build]
+
+[[mounts]]
+  source = "myapp_data"
+  destination = "/data"
+  auto_extend_size_threshold = 0
 
 [http_service]
   internal_port = 3000
@@ -14,14 +19,9 @@ primary_region = "waw"
   auto_stop_machines = false
   auto_start_machines = true
   min_machines_running = 0
-  max_maxhines_running = 1
   processes = ["app"]
 
 [[vm]]
   cpu_kind = "shared"
   cpus = 1
   memory_mb = 256
-
-[mounts]
-  source="myapp_data"
-  destination="/data"
