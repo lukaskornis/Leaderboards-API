@@ -13,37 +13,31 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use((req, res, next) => {
+    // Check if the path starts with /piped
     if (req.path.startsWith(`/piped`)) {
+        // Remove /piped from the path
         req.path = req.path.substring(6);
         req.url = req.url.substring(6);
         req.originalUrl = req.originalUrl.substring(6);
         req.baseUrl = req.baseUrl.substring(6);
         req.piped = true;
     }
+
+    // Continue to the next middleware or route handler
     next();
 });
 
 var oldSend = express.response.send;
 express.response.send = function (body) {
     if (this.req.piped) {
+        // response header plain text
         this.type('text/plain');
+        // keys separated by | values separated by ,
+        // array items separated by |
         if (Array.isArray(body)) {
             body = body.join('|');
         }
-        else if (typeof body === 'object') {
-            body = Object.entries(body).map(([key, value]) => `${key}|${value}`).join(',');
-        }
-    }
-    oldSend.call(this, body);
-}
-
-
-express.response.json = function (body) {
-    if (this.req.piped) {
-        this.type('text/plain');
-        if (Array.isArray(body)) {
-            body = body.join('|');
-        }
+        // objects are converted to key:value pairs
         else if (typeof body === 'object') {
             body = Object.entries(body).map(([key, value]) => `${key}|${value}`).join(',');
         }
