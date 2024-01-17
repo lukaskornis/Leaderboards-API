@@ -84,6 +84,8 @@ router.get('/:boardName', (req, res) => {
 
 // get all board names
 router.get('/', (req, res) => {
+    console.log(req.originalUrl);
+    // send as array of value names
     res.send(Object.keys(boards));
 });
 
