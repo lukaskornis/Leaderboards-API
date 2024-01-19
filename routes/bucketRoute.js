@@ -4,9 +4,18 @@ const router = express.Router();
 const buckets = {}
 
 
-// view all buckets names
-router.get('/', (req, res) => {
-    res.send(Object.keys(buckets));
+
+// delete bucket board if exists
+router.get('/:boardName/delete', (req, res) => {
+    const { boardName } = req.params;
+
+    // if board does not exist, return an error message
+    if (!buckets[boardName]) {
+        return res.status(404).json({ error: 'Cannot delete. Board not found' });
+    }
+
+    delete buckets[boardName];
+    res.json(buckets);
 });
 
 
@@ -37,6 +46,11 @@ router.get('/:boardName([a-z][a-z0-9_-]*)', (req, res) => {
     res.send(board);
 });
 
+
+// view all buckets names
+router.get('/', (req, res) => {
+    res.send(Object.keys(buckets));
+});
 
 
 // SAVING LOADING
