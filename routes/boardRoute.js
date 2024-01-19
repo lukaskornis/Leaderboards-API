@@ -8,18 +8,33 @@ const maxNameLength = 10;
 let boards = {};
 
 
-// reset board
-router.get('/:boardName/reset', (req, res) => {
+// delete board
+router.get('/:boardName/delete', (req, res) => {
     const board = boards[req.params.boardName];
     if (board) {
         boards[req.params.boardName] = {};
-        res.send('Board reset');
+        res.send('Board deleted');
     } else {
         res.send('Board not found');
     }
 });
 
+// add value to already existing score
+router.get('/:boardName/:name([a-z][a-z0-9_-]*)/:score(\\d+)/add', validateName, (req, res) => {
+    const { boardName, name, score } = req.params;
 
+    const board = boards[boardName] = boards[boardName] || {};
+    const scoreInt = parseInt(score);
+
+    if (!board[name]) {
+        return res.status(400).json({ error: 'Score does not exist' });
+    }
+
+    // add if exists or set to score
+    board[name] = board[name] ? board[name] + scoreInt : scoreInt;
+    boards[boardName] = Object.fromEntries(Object.entries(board).sort(([, a], [, b]) => b - a));
+    res.json(board);
+});
 
 // Add new score /boardName/name/score
 router.get('/:boardName/:name([a-z][a-z0-9_-]*)/:score(\\d+)', validateName, (req, res) => {
@@ -31,6 +46,7 @@ router.get('/:boardName/:name([a-z][a-z0-9_-]*)/:score(\\d+)', validateName, (re
     if (board[name] && board[name] >= scoreInt) {
         return res.status(400).json({ error: 'Score exists and is equal or higher' });
     }
+
 
     board[name] = scoreInt;
     boards[boardName] = Object.fromEntries(Object.entries(board).sort(([, a], [, b]) => b - a));
@@ -50,19 +66,19 @@ router.get('/:boardName/:from(\\d+)-:to(\\d+)', (req, res) => {
 });
 
 
-// route get user score and position. board is already sorted
-router.get('/:boardName/:name', (req, res) => {
+// route get user position. board is already sorted
+router.get('/:boardName/:name/position', (req, res) => {
     const { boardName, name } = req.params;
     if (!boards[boardName]) {
-        return res.status(404).json({ error: 'Cannot get user. Board not found' });
+        return res.status(404).json({ error: 'Cannot get user position. Board not found' });
     }
 
     if (!boards[boardName][name]) {
-        return res.status(404).json({ error: 'Cannot get user. Name not found' });
+        return res.status(404).json({ error: 'Cannot get user position. Name not found' });
     }
 
-    const position = Object.keys(boards[boardName]).indexOf(name);
-    res.json({ score: boards[boardName][name], position });
+    const position = Object.entries(boards[boardName]).findIndex(([key]) => key === name);
+    res.send(position.toString());
 });
 
 // Delete score /boardName/name/delete
@@ -75,6 +91,25 @@ router.get('/:boardName/:name/delete', (req, res) => {
     delete board[req.params.name];
     res.json(board);
 });
+
+
+// route get user score. board is already sorted
+router.get('/:boardName/:name', (req, res) => {
+    const { boardName, name } = req.params;
+    if (!boards[boardName]) {
+        return res.status(404).json({ error: 'Cannot get user. Board not found' });
+    }
+
+    if (!boards[boardName][name]) {
+        return res.status(404).json({ error: 'Cannot get user. Name not found' });
+    }
+
+    console.log(boards[boardName][name]);
+    res.send(boards[boardName][name].toString());
+});
+
+
+
 
 // get board
 router.get('/:boardName', (req, res) => {
@@ -92,6 +127,7 @@ router.get('/', (req, res) => {
 
 // Saving/Loading boards to/from file
 const fs = require('fs');
+const { log } = require('console');
 const saveFile = 'data/boards.json';
 
 const saveData = (data) => {

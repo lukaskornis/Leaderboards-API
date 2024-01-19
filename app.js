@@ -35,11 +35,28 @@ express.response.send = function (body) {
         // keys separated by | values separated by ,
         // array items separated by |
         if (Array.isArray(body)) {
-            body = body.join('|');
+            body = body.join(',');
         }
         // objects are converted to key:value pairs
         else if (typeof body === 'object') {
-            body = Object.entries(body).map(([key, value]) => `${key}|${value}`).join(',');
+            body = Object.entries(body).map(([key, value]) => `${key},${value}`).join('|');
+        }
+    }
+    oldSend.call(this, body);
+}
+
+express.response.json = function (body) {
+    if (this.req.piped) {
+        // response header plain text
+        this.type('text/plain');
+        // keys separated by | values separated by ,
+        // array items separated by |
+        if (Array.isArray(body)) {
+            body = body.join(',');
+        }
+        // objects are converted to key:value pairs
+        else if (typeof body === 'object') {
+            body = Object.entries(body).map(([key, value]) => `${key},${value}`).join('|');
         }
     }
     oldSend.call(this, body);
