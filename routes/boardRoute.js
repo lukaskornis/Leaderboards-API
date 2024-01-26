@@ -26,14 +26,12 @@ router.get('/:boardName/:name([a-z][a-z0-9_-]*)/:score(\\d+)/add', validateName,
     const board = boards[boardName] = boards[boardName] || {};
     const scoreInt = parseInt(score);
 
-    if (!board[name]) {
-        return res.status(400).json({ error: 'Score does not exist' });
-    }
 
     // add if exists or set to score
     board[name] = board[name] ? board[name] + scoreInt : scoreInt;
     boards[boardName] = Object.fromEntries(Object.entries(board).sort(([, a], [, b]) => b - a));
-    res.json(board);
+    // send score as string
+    res.send(board[name].toString());
 });
 
 // Add new score /boardName/name/score
@@ -61,8 +59,9 @@ router.get('/:boardName/:from(\\d+)-:to(\\d+)', (req, res) => {
     if (!boards[boardName]) {
         return res.status(404).json({ error: 'Board not found' });
     }
-    const top = Object.entries(boards[boardName]).slice(from, to);
-    res.json(top[0]);
+    // as object
+    const top = Object.fromEntries(Object.entries(boards[boardName]).slice(from, to));
+    res.json(top);
 });
 
 
