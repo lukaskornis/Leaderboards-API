@@ -1,4 +1,7 @@
 # simple Leaderboard API
+General purpose leaderboard and stats API built with Node.js, Express, all data held in memory.
+All routes use GET requests for simple client integration.
+Good fit to quickly add social features or anonymous statistics for the app.
 
 | Route | Description |
 | --- | --- |
